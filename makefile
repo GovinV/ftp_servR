@@ -1,4 +1,4 @@
-all:  ftp.o string.o
+all:  cmdFtp.o ftp.o
 	gcc -Wall -Wextra -I include/ client.c $^ -o client
 	
 %.o: %.c

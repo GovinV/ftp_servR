@@ -9,25 +9,22 @@
 #include <arpa/inet.h>
 #include <string.h>
 #include <netdb.h>
-#include "string.h"
+#include "cmdFtp.h"
 #include "ftp.h"
 
-int main(int argc, char **argv)
+int main(void)
 {
 
     struct addrinfo hints;
     struct addrinfo *result, *rp;
     int sfd, 
         s,
-        tmp,
-        j,
         type,
         endFtp,
         debug,
         anonymous,
         connected;
-    size_t len;
-    ssize_t nread;
+
     char    buf[BUF_SIZE],
             bufC[1024], 
             trash[120],
@@ -37,11 +34,11 @@ int main(int argc, char **argv)
             port[20];
 
     // check the number of args on command line
-    if(argc != 1)
-    {
-        printf("USAGE: ./client \n");
-        exit(-1);
-    }
+    // if(argc != 1)
+    // {
+    //     printf("USAGE: ./client \n");
+    //     exit(-1);
+    // }
     
     endFtp      = 1;
     connected   = 0;
@@ -64,10 +61,17 @@ int main(int argc, char **argv)
     while(endFtp)
     {   
         if(fgets(bufC, 1024, stdin) == NULL)
+        {
+            printf("ftp> ");
             continue;
-
+        }
+        if(bufC[0] == '\n')
+        {
+            printf("ftp> ");
+            continue;            
+        }
         type = command(bufC);
-        
+
         if(type == CMD_OPEN)
         {        
             sscanf(bufC, "%s %s %s\n",trash,host,port);
@@ -100,73 +104,64 @@ int main(int argc, char **argv)
                close(sfd);
             }
 
-            if (rp == NULL) {               /* No address succeeded */
+            if (rp == NULL) 
+            {               /* No address succeeded */
                fprintf(stderr, "Could not connect\n");
+               printf("ftp> ");
                continue;
             }
             else
             {
+                receiveFServ(sfd, buf);
                 /* authentification */
                 /* login */
                 printf("Name (localhost:anonymous): ");
                 fflush(stdout);
                 scanf("%s", login);
-                while ((tmp = getchar()) != '\n' && tmp != EOF); /* display login */
-                if (strcmp(buf, "anonymous") == 0)
+                // if (strcmp(buf, "anonymous") == 0)
+                // {
+                //     anonymous = 1;
+                // }
+                sprintf(buf, "USER %s\n", login);
+                if (sendto(sfd, buf, strlen(buf),0,
+                (struct sockaddr *)rp->ai_addr,rp->ai_addrlen) == -1) 
                 {
-                    anonymous = 1;
-                }
-                sprintf(buf, "USER %s\r\n", login);
-                if (send(sfd, buf, strlen(buf), 0) == -1) 
-                {
-                    perror("send");
+                    perror("sendto");
                     exit(EXIT_FAILURE);
                 }
 	            memset(buf, '\0', BUF_SIZE);
                 receiveFServ(sfd, buf);
-                fflush(stdout);
+
                 /* end login */
 
                 /* password */
                 printf("Password: ");
                 fflush(stdout);
-                if (anonymous == 1)
+                scanf("%s", password);
+                sprintf(buf, "PASS %s\n", password);
+                if (sendto(sfd, buf, strlen(buf),0,
+                (struct sockaddr *)rp->ai_addr,rp->ai_addrlen) == -1) 
                 {
-                    if ( (tmp = getchar()) == '\n')
-                    {
-                        printf("Using binary mode to transfer files.\n");
-                        connected = 1;
-                    }
+                    perror("sendto");
+                    exit(EXIT_FAILURE);
                 }
-                else
-                {
-                    scanf("%s", password);
-                    memset(password, '\0', MAX_PASSWORD);
-                    fgets (password, MAX_PASSWORD, stdin);
-                    password[strlen(password) - 1] = '\0';
-                    sprintf(buf, "PASS %s\r\n", password);
-                    if (send(sfd, buf, strlen(buf), 0) == -1) 
-                    {
-                        perror("send");
-                        exit(EXIT_FAILURE);
-                    }
-                    memset(buf, '\0', BUF_SIZE);
-                    receiveFServ(sfd, buf);
-                    fflush(stdout);
-                    connected = 1;
-                }
+                memset(buf, '\0', BUF_SIZE);
+                receiveFServ(sfd, buf);
+
                 /* end password */
                 /* end authentification */
+                connected = 1;
                 freeaddrinfo(result);           /* No longer needed */
+                fgets(bufC, 1024, stdin);//get \n
             }
         }
         else if ((type == CMD_EXIT) || (type == CMD_CIAO))
         {
             endFtp = 0 ;
-            printf("---> QUIT\n");
+           
             if (debug == 1)
             {
-                printf("221 Goodbye.\n");
+                 printf("---> QUIT\n");
             }
         }
         else if ((type == CMD_DEBUGON) || (type == CMD_DEBUGOFF))
@@ -195,10 +190,10 @@ int main(int argc, char **argv)
                     case CMD_EXIT :
                     case CMD_CIAO :
                         endFtp = 0;
-                        printf("---> QUIT\n");
+                        
                         if (debug == 1)
                         {
-                            printf("221 Goodbye.\n");
+                            printf("---> QUIT\n");
                         }
                         break;
                     case CMD_DIR:
@@ -235,98 +230,12 @@ int main(int argc, char **argv)
                 }
             }
         }
-        if (endFtp != 0)
+        if (endFtp)
         { 
             printf("ftp> ");
         }
     }
 
-/*
-    int count;
-    do{
-        count = recv(sfd,buf,BUF_SIZE,0);
-         int end = 1;
-        char *s = buf;
-        while(*s != '\0')
-        {
-          if(*s == '\r')
-          {
-            s++;
-            if(*s=='\n')
-              end = 0;
-          }
-          if(end)
-            printf("%c", *s);
-          else
-            break;
-          s++;
-        }
-        if(!end)
-        {
-          printf("\n");
-          break;
-        }
-    } while(count == BUF_SIZE);
 
-    if(sendto(sfd,"USER gov-ftp\n",14,0,
-                (struct sockaddr *)rp->ai_addr,rp->ai_addrlen) == -1)
-    {
-        perror("sendto");
-        close(sfd);
-        exit(EXIT_FAILURE);
-    }
-
-// une demande une reponse en ue ligne si plus que une ligne on a "123-" et a la fin "123 " 
-    do{
-        count = recv(sfd,buf,BUF_SIZE,0);
-
-         int end = 1;
-        char *s = buf;
-        while(*s != '\0')
-        {
-          if(*s == '\r')
-          {
-            s++;
-            if(*s=='\n')
-              end = 0;
-          }
-          if(end)
-            printf("%c", *s);
-          else
-            break;
-          s++;
-        }
-        if(!end)
-        {
-          printf("\n");
-          break;
-        }
-    } while(count == BUF_SIZE);
-
-    fflush(stdout);
-      printf("end Received\n");*/
     return 0;
 }
-/*
-
-char buffer[8192]; // or whatever you like, but best to keep it large
-int count = 0;
-int total = 0;
-
-while ((count = recv(socket, &buffer[total], sizeof buffer - count, 0)) > 0)
-{
-    total += count;
-    // At this point the buffer is valid from 0..total-1, if that's enough then process it and break, otherwise continue
-}
-if (count == -1)
-{
-    perror("recv");
-}
-else if (count == 0)
-{
-    // EOS on the socket: close it, exit the thread, etc.
-}
-
-https://stackoverflow.com/questions/27205810/how-recv-function-works-when-looping
-
-*/

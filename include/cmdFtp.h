@@ -12,6 +12,7 @@
 #include <arpa/inet.h>
 #include <string.h>
 #include <netdb.h>
+#include <ctype.h>
 
 #define CMD_OPEN        1 // open
 #define CMD_DIR         2 // dir
