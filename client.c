@@ -108,7 +108,7 @@ int main(int argc, char **argv)
             {
                 /* authentification */
                 /* login */
-                printf("Name (anonymous): ");
+                printf("Name (localhost:anonymous): ");
                 fflush(stdout);
                 scanf("%s", login);
                 while ((tmp = getchar()) != '\n' && tmp != EOF); /* display login */
@@ -124,11 +124,11 @@ int main(int argc, char **argv)
                 }
 	            memset(buf, '\0', BUF_SIZE);
                 receiveFServ(sfd, buf);
-                connected = 1;
+                fflush(stdout);
                 /* end login */
 
                 /* password */
-                /*printf("Password: ");
+                printf("Password: ");
                 fflush(stdout);
                 if (anonymous == 1)
                 {
@@ -141,7 +141,10 @@ int main(int argc, char **argv)
                 else
                 {
                     scanf("%s", password);
-                    sprintf(buf, "PASS %s\r\n", login);
+                    memset(password, '\0', MAX_PASSWORD);
+                    fgets (password, MAX_PASSWORD, stdin);
+                    password[strlen(password) - 1] = '\0';
+                    sprintf(buf, "PASS %s\r\n", password);
                     if (send(sfd, buf, strlen(buf), 0) == -1) 
                     {
                         perror("send");
@@ -149,7 +152,9 @@ int main(int argc, char **argv)
                     }
                     memset(buf, '\0', BUF_SIZE);
                     receiveFServ(sfd, buf);
-                }*/
+                    fflush(stdout);
+                    connected = 1;
+                }
                 /* end password */
                 /* end authentification */
                 freeaddrinfo(result);           /* No longer needed */
@@ -169,12 +174,12 @@ int main(int argc, char **argv)
             if (debug == 0)
             {
                 debug = 1;
-                printf("Debugging on (debug=1).");
+                printf("Debugging on (debug=1).\n");
             }
             else if (debug == 1)
             {
                 debug = 0;
-                printf("Debugging on (debug=0).");
+                printf("Debugging on (debug=0).\n");
             }
         }
         else
@@ -205,12 +210,12 @@ int main(int argc, char **argv)
                         if (debug == 0)
                         {
                             debug = 1;
-                            printf("Debugging on (debug=1).");
+                            printf("Debugging on (debug=1).\n");
                         }
                         else if (debug == 1)
                         {
                             debug = 0;
-                            printf("Debugging on (debug=0).");
+                            printf("Debugging on (debug=0).\n");
                         }
                         break;
                     case CMD_GET:
