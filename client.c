@@ -10,10 +10,7 @@
 #include <string.h>
 #include <netdb.h>
 #include "string.h"
-
-#define BUF_SIZE 1024
-
-int connected = 0;
+#include "ftp.h"
 
 int main(int argc, char **argv)
 {
@@ -24,7 +21,7 @@ int main(int argc, char **argv)
     size_t len;
     ssize_t nread;
     char buf[BUF_SIZE];
-
+    int connected = 0;
 
     // check the number of args on command line
     if(argc != 1)
@@ -51,7 +48,7 @@ int main(int argc, char **argv)
 
     printf("ftp> ");
     
-    while(!connected)
+    while(1)
     {   
         if(fgets(bufC,1024,stdin) == NULL)
             continue;
@@ -70,10 +67,12 @@ int main(int argc, char **argv)
                 exit(EXIT_FAILURE);
             }
 
-            /* getaddrinfo() returns a list of address structures.
+            /* 
+              getaddrinfo() returns a list of address structures.
               Try each address until we successfully connect(2).
               If socket(2) (or connect(2)) fails, we (close the socket
-              and) try the next address. */
+              and) try the next address. 
+            */
 
             for (rp = result; rp != NULL; rp = rp->ai_next) 
             {
@@ -97,13 +96,17 @@ int main(int argc, char **argv)
                 connected = 1;
                 printf("Connexion ok\n");
                 freeaddrinfo(result);           /* No longer needed */
+                receiveFServ(sfd,buf);
             }
         }
         else
         {
-            printf("Not Connected\n");
-            printf("ftp> ");
+            if(!connected)
+            {
+                printf("Not Connected\n");
+            }
         }
+        printf("ftp> ");
     }
 
 

@@ -1,15 +1,41 @@
 #include "ftp.h"
 
-int send(int sockfd)
-{
-
-}
-void receive(int sockfd) 
+int send2Serv(int sockfd)
 {
 
 }
 
-int show(int sockfd, char * file, int debug, int sockdata)
+void receiveFServ(int sfd, char * buf) 
+{
+	int count;
+	do
+	{
+		count = recv(sfd,buf,BUF_SIZE,0);
+		int end = 1;
+		char *s = buf;
+		while(*s != '\0')
+		{
+			if(*s == '\r')
+			{
+				s++;
+				if(*s=='\n')
+					end = 0;
+			}
+			if(end)
+				printf("%c", *s);
+			else
+				break;
+			s++;
+		}
+		if(!end)
+		{
+			printf("\n");
+			break;
+		}
+	} while(count == BUF_SIZE);
+}
+
+int cmd_show(int sockfd, char * file, int debug, int sockdata)
 {
     
 }
@@ -20,7 +46,7 @@ int show(int sockfd, char * file, int debug, int sockdata)
  * 150 Here comes the directory listing.
  * 226 Directory send OK.
 */
-int ls(int sockfd, int debug)
+int cmd_ls(int sockfd, int debug)
 {
 
 }
@@ -28,7 +54,7 @@ int ls(int sockfd, int debug)
  * ---> QUIT
  * 221 Goodbye.
 */
-int exit(int sockfd, int debug)
+int cmd_exit(int sockfd, int debug)
 {
 
 }
@@ -37,7 +63,7 @@ int exit(int sockfd, int debug)
  * ---> CWD Documents
  * 250 Directory successfully changed.
 */
-int cd(int sockfd, char * file, int debug)
+int cmd_cd(int sockfd, char * file, int debug)
 {
 
 }
@@ -46,7 +72,7 @@ int cd(int sockfd, char * file, int debug)
  * Debugging off (debug=0).
  * Debugging off (debug=1).
 */
-int debug(int sockfd, int debug)
+int cmd_debug(int sockfd, int debug)
 {
 
 }
@@ -62,7 +88,7 @@ int debug(int sockfd, int debug)
  * 226 Transfer complete.
  * <byte> bytes received in 0.01 secs (95.3139 kB/s)
 */
-int get(int sockfd, char * file, int debug)
+int cmd_get(int sockfd, char * file, int debug)
 {
 
 }
@@ -71,7 +97,7 @@ int get(int sockfd, char * file, int debug)
  * ---> QUIT
  * 221 Goodbye.
 */
-int ciao(int sockfd, int debug)
+int cmd_ciao(int sockfd, int debug)
 {
 
 }
