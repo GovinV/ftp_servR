@@ -17,16 +17,24 @@ int main(int argc, char **argv)
 
     struct addrinfo hints;
     struct addrinfo *result, *rp;
-    int sfd, s, j;
+    int sfd, 
+        s,
+        tmp,
+        j,
+        type,
+        endFtp,
+        debug,
+        anonymous,
+        connected;
     size_t len;
     ssize_t nread;
-    char buf[BUF_SIZE];
-    char bufC[1024];
-    char trash[120];
-    char host[1024];
-    int connected;
-    char port[20];
-    int endFtp;
+    char    buf[BUF_SIZE],
+            bufC[1024], 
+            trash[120],
+            host[1024],
+            login[MAX_LOGIN],
+            password[MAX_PASSWORD],
+            port[20];
 
     // check the number of args on command line
     if(argc != 1)
@@ -35,8 +43,10 @@ int main(int argc, char **argv)
         exit(-1);
     }
     
-    endFtp = 1;
-    connected = 0;
+    endFtp      = 1;
+    connected   = 0;
+    debug       = 0;
+    anonymous   = 0;
 
     memset(host,'\0',1024);
     memset(port,'\0',20);
@@ -53,10 +63,10 @@ int main(int argc, char **argv)
     
     while(endFtp)
     {   
-        if(fgets(bufC,1024,stdin) == NULL)
+        if(fgets(bufC, 1024, stdin) == NULL)
             continue;
 
-        int type = command(bufC);
+        type = command(bufC);
         
         if(type == CMD_OPEN)
         {        
@@ -79,7 +89,7 @@ int main(int argc, char **argv)
 
             for (rp = result; rp != NULL; rp = rp->ai_next) 
             {
-               sfd = socket(rp->ai_family, rp->ai_socktype,
+                sfd = socket(rp->ai_family, rp->ai_socktype,
                             rp->ai_protocol);
                if (sfd == -1)
                    continue;
@@ -96,10 +106,75 @@ int main(int argc, char **argv)
             }
             else
             {
+                /* authentification */
+                /* login */
+                printf("Name (anonymous): ");
+                fflush(stdout);
+                scanf("%s", login);
+                while ((tmp = getchar()) != '\n' && tmp != EOF); /* display login */
+                if (strcmp(buf, "anonymous") == 0)
+                {
+                    anonymous = 1;
+                }
+                sprintf(buf, "USER %s\r\n", login);
+                if (send(sfd, buf, strlen(buf), 0) == -1) 
+                {
+                    perror("send");
+                    exit(EXIT_FAILURE);
+                }
+	            memset(buf, '\0', BUF_SIZE);
+                receiveFServ(sfd, buf);
                 connected = 1;
-                printf("Connexion ok\n");
+                /* end login */
+
+                /* password */
+                /*printf("Password: ");
+                fflush(stdout);
+                if (anonymous == 1)
+                {
+                    if ( (tmp = getchar()) == '\n')
+                    {
+                        printf("Using binary mode to transfer files.\n");
+                        connected = 1;
+                    }
+                }
+                else
+                {
+                    scanf("%s", password);
+                    sprintf(buf, "PASS %s\r\n", login);
+                    if (send(sfd, buf, strlen(buf), 0) == -1) 
+                    {
+                        perror("send");
+                        exit(EXIT_FAILURE);
+                    }
+                    memset(buf, '\0', BUF_SIZE);
+                    receiveFServ(sfd, buf);
+                }*/
+                /* end password */
+                /* end authentification */
                 freeaddrinfo(result);           /* No longer needed */
-                receiveFServ(sfd,buf);
+            }
+        }
+        else if ((type == CMD_EXIT) || (type == CMD_CIAO))
+        {
+            endFtp = 0 ;
+            printf("---> QUIT\n");
+            if (debug == 1)
+            {
+                printf("221 Goodbye.\n");
+            }
+        }
+        else if ((type == CMD_DEBUGON) || (type == CMD_DEBUGOFF))
+        {
+            if (debug == 0)
+            {
+                debug = 1;
+                printf("Debugging on (debug=1).");
+            }
+            else if (debug == 1)
+            {
+                debug = 0;
+                printf("Debugging on (debug=0).");
             }
         }
         else
@@ -116,14 +191,27 @@ int main(int argc, char **argv)
                     case CMD_CIAO :
                         endFtp = 0;
                         printf("---> QUIT\n");
+                        if (debug == 1)
+                        {
+                            printf("221 Goodbye.\n");
+                        }
                         break;
                     case CMD_DIR:
                         break;
                     case CMD_SHOW:
                         break;
                     case CMD_DEBUGON:
-                        break;
                     case CMD_DEBUGOFF:
+                        if (debug == 0)
+                        {
+                            debug = 1;
+                            printf("Debugging on (debug=1).");
+                        }
+                        else if (debug == 1)
+                        {
+                            debug = 0;
+                            printf("Debugging on (debug=0).");
+                        }
                         break;
                     case CMD_GET:
                         break;
@@ -142,8 +230,10 @@ int main(int argc, char **argv)
                 }
             }
         }
-        if (endFtp) 
+        if (endFtp != 0)
+        { 
             printf("ftp> ");
+        }
     }
 
 /*

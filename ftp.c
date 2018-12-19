@@ -10,7 +10,7 @@ void receiveFServ(int sfd, char * buf)
 	int count;
 	do
 	{
-		count = recv(sfd,buf,BUF_SIZE,0);
+		count = recv(sfd, buf, BUF_SIZE, 0);
 		int end = 1;
 		char *s = buf;
 		while(*s != '\0')
@@ -85,20 +85,5 @@ int cmd_get(int sockfd, char * file, int debug)
 
 }
 
-/*
- * ---> QUIT
- * 221 Goodbye.
-*/
-int cmd_ciao(int sockfd, int debug)
-{
 
-}
-/*
- * ---> QUIT
- * 221 Goodbye.
-*/
-int cmd_exit(int sockfd, int debug)
-{
-
-}
 /* ren mkd rmd send */ 
