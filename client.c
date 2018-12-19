@@ -21,7 +21,12 @@ int main(int argc, char **argv)
     size_t len;
     ssize_t nread;
     char buf[BUF_SIZE];
-    int connected = 0;
+    char bufC[1024];
+    char trash[120];
+    char host[1024];
+    int connected;
+    char port[20];
+    int endFtp;
 
     // check the number of args on command line
     if(argc != 1)
@@ -30,12 +35,10 @@ int main(int argc, char **argv)
         exit(-1);
     }
     
-    char bufC[1024];
+    endFtp = 1;
+    connected = 0;
 
-    char trash[120];
-    char host[1024];
     memset(host,'\0',1024);
-    char port[20];
     memset(port,'\0',20);
     
     /* Obtain address(es) matching host/port */
@@ -48,7 +51,7 @@ int main(int argc, char **argv)
 
     printf("ftp> ");
     
-    while(1)
+    while(endFtp)
     {   
         if(fgets(bufC,1024,stdin) == NULL)
             continue;
@@ -105,11 +108,45 @@ int main(int argc, char **argv)
             {
                 printf("Not Connected\n");
             }
+            else
+            { 
+                switch(type)
+                {
+                    case CMD_EXIT :
+                    case CMD_CIAO :
+                        endFtp = 0;
+                        printf("---> QUIT\n");
+                        break;
+                    case CMD_DIR:
+                        break;
+                    case CMD_SHOW:
+                        break;
+                    case CMD_DEBUGON:
+                        break;
+                    case CMD_DEBUGOFF:
+                        break;
+                    case CMD_GET:
+                        break;
+                    case CMD_SEND:
+                        break;
+                    case CMD_REN:
+                        break;
+                    case CMD_DEL:
+                        break;
+                    case CMD_CD:
+                        break;
+                    case CMD_MKD:
+                        break;
+                    case CMD_RMD:
+                        break;
+                }
+            }
         }
-        printf("ftp> ");
+        if (endFtp) 
+            printf("ftp> ");
     }
 
-
+/*
     int count;
     do{
         count = recv(sfd,buf,BUF_SIZE,0);
@@ -172,7 +209,7 @@ int main(int argc, char **argv)
     } while(count == BUF_SIZE);
 
     fflush(stdout);
-      printf("end Received\n");
+      printf("end Received\n");*/
     return 0;
 }
 /*

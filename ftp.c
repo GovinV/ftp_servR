@@ -50,14 +50,6 @@ int cmd_ls(int sockfd, int debug)
 {
 
 }
-/*
- * ---> QUIT
- * 221 Goodbye.
-*/
-int cmd_exit(int sockfd, int debug)
-{
-
-}
 
 /*
  * ---> CWD Documents
@@ -101,5 +93,12 @@ int cmd_ciao(int sockfd, int debug)
 {
 
 }
+/*
+ * ---> QUIT
+ * 221 Goodbye.
+*/
+int cmd_exit(int sockfd, int debug)
+{
 
+}
 /* ren mkd rmd send */ 
