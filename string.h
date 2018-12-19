@@ -27,7 +27,7 @@
 #define CMD_MKD         12 // mkd
 #define CMD_RMD         13 // rmd
 #define CMD_EXIT        14 // exit
-#define NBCLE           13
+#define NBCLE           14
 #define ERROR           -1
 
 typedef struct 

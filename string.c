@@ -24,9 +24,11 @@ int command(char * command_client)
 
     for (i = 0 ; i < NBCLE ; i++) 
     {
+
         t_symcle *sym = &tabcle[i];
         if (strncmp(sym->tcommand, command_client, sym->size) == 0)
         {
+
             return sym->val;
         }
     }

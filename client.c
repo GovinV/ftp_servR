@@ -9,8 +9,11 @@
 #include <arpa/inet.h>
 #include <string.h>
 #include <netdb.h>
+#include "string.h"
 
 #define BUF_SIZE 1024
+
+int connected = 0;
 
 int main(int argc, char **argv)
 {
@@ -24,13 +27,19 @@ int main(int argc, char **argv)
 
 
     // check the number of args on command line
-    if(argc < 3)
+    if(argc != 1)
     {
-      printf("USAGE: ./client \n", argv[0]);
-      exit(-1);
+        printf("USAGE: ./client \n");
+        exit(-1);
     }
+    
     char bufC[1024];
-    fgets(buf,1024,stdin);
+
+    char trash[120];
+    char host[1024];
+    memset(host,'\0',1024);
+    char port[20];
+    memset(port,'\0',20);
     
     /* Obtain address(es) matching host/port */
 
@@ -40,51 +49,65 @@ int main(int argc, char **argv)
     hints.ai_flags = AI_PASSIVE;
     hints.ai_protocol = 0;          /* Any protocol */
 
-    s = getaddrinfo(argv[1], argv[2], &hints, &result);
-    if (s != 0) {
-       fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(s));
-       exit(EXIT_FAILURE);
+    printf("ftp> ");
+    
+    while(!connected)
+    {   
+        if(fgets(bufC,1024,stdin) == NULL)
+            continue;
+
+        int type = command(bufC);
+        
+        if(type == CMD_OPEN)
+        {        
+            sscanf(bufC, "%s %s %s\n",trash,host,port);
+
+            s = getaddrinfo(host,port,&hints, &result);
+            
+            if (s != 0) 
+            {
+                fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(s));
+                exit(EXIT_FAILURE);
+            }
+
+            /* getaddrinfo() returns a list of address structures.
+              Try each address until we successfully connect(2).
+              If socket(2) (or connect(2)) fails, we (close the socket
+              and) try the next address. */
+
+            for (rp = result; rp != NULL; rp = rp->ai_next) 
+            {
+               sfd = socket(rp->ai_family, rp->ai_socktype,
+                            rp->ai_protocol);
+               if (sfd == -1)
+                   continue;
+
+               if (connect(sfd, rp->ai_addr, rp->ai_addrlen) != -1)
+                   break;                  /* Success */
+
+               close(sfd);
+            }
+
+            if (rp == NULL) {               /* No address succeeded */
+               fprintf(stderr, "Could not connect\n");
+               continue;
+            }
+            else
+            {
+                connected = 1;
+                printf("Connexion ok\n");
+                freeaddrinfo(result);           /* No longer needed */
+            }
+        }
+        else
+        {
+            printf("Not Connected\n");
+            printf("ftp> ");
+        }
     }
 
-    /* getaddrinfo() returns a list of address structures.
-      Try each address until we successfully connect(2).
-      If socket(2) (or connect(2)) fails, we (close the socket
-      and) try the next address. */
 
-    for (rp = result; rp != NULL; rp = rp->ai_next) {
-       sfd = socket(rp->ai_family, rp->ai_socktype,
-                    rp->ai_protocol);
-       if (sfd == -1)
-           continue;
-
-       if (connect(sfd, rp->ai_addr, rp->ai_addrlen) != -1)
-           break;                  /* Success */
-
-       close(sfd);
-    }
-
-    printf("Connexion ok\n");
-
-    if (rp == NULL) {               /* No address succeeded */
-       fprintf(stderr, "Could not connect\n");
-       exit(EXIT_FAILURE);
-    }
-
-    freeaddrinfo(result);           /* No longer needed */
-
-    /* Send remaining command-line arguments as separate
-      datagrams, and read responses from server */
-    // if(sendto(sfd,"USER gov-ftp\n",14,0,
-    //             (struct sockaddr *)rp->ai_addr,rp->ai_addrlen) == -1)
-    // {
-    //     perror("sendto");
-    //     close(sfd);
-    //     exit(EXIT_FAILURE);
-    // }
-   int count = 0;
-   char st[1024], t[1024];
-  
-   
+    int count;
     do{
         count = recv(sfd,buf,BUF_SIZE,0);
          int end = 1;
