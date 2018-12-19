@@ -13,6 +13,7 @@
 #include <string.h>
 #include <netdb.h>
 #include <ctype.h>
+#include <termios.h>
 
 #define CMD_OPEN        1 // open
 #define CMD_DIR         2 // dir

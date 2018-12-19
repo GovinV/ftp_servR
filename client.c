@@ -22,7 +22,6 @@ int main(void)
         type,
         endFtp,
         debug,
-        anonymous,
         connected;
 
     char    buf[BUF_SIZE],
@@ -32,7 +31,7 @@ int main(void)
             login[MAX_LOGIN],
             password[MAX_PASSWORD],
             port[20];
-
+    struct termios term, term_orig;
     // check the number of args on command line
     // if(argc != 1)
     // {
@@ -43,7 +42,7 @@ int main(void)
     endFtp      = 1;
     connected   = 0;
     debug       = 0;
-    anonymous   = 0;
+
 
     memset(host,'\0',1024);
     memset(port,'\0',20);
@@ -118,16 +117,21 @@ int main(void)
                 printf("Name (localhost:anonymous): ");
                 fflush(stdout);
                 scanf("%s", login);
-                // if (strcmp(buf, "anonymous") == 0)
-                // {
-                //     anonymous = 1;
-                // }
+                if (strncmp(login, "anonymous",9) == 0)
+                {
+                    printf("Any password, however type at least a letter before <enter>\n");
+                    fflush(stdout);
+                }
                 sprintf(buf, "USER %s\n", login);
                 if (sendto(sfd, buf, strlen(buf),0,
                 (struct sockaddr *)rp->ai_addr,rp->ai_addrlen) == -1) 
                 {
                     perror("sendto");
                     exit(EXIT_FAILURE);
+                }
+                if (debug == 1)
+                {
+                    printf("---> USER %s\n", login);
                 }
 	            memset(buf, '\0', BUF_SIZE);
                 receiveFServ(sfd, buf);
@@ -137,13 +141,28 @@ int main(void)
                 /* password */
                 printf("Password: ");
                 fflush(stdout);
+
+                /* hide password */
+                tcgetattr(STDIN_FILENO, &term);
+                term_orig = term;
+                term.c_lflag &= ~ECHO;
+                tcsetattr(STDIN_FILENO, TCSANOW, &term);
+
                 scanf("%s", password);
+
+                tcsetattr(STDIN_FILENO, TCSANOW, &term_orig);
+                /* hide password */
                 sprintf(buf, "PASS %s\n", password);
                 if (sendto(sfd, buf, strlen(buf),0,
                 (struct sockaddr *)rp->ai_addr,rp->ai_addrlen) == -1) 
                 {
                     perror("sendto");
                     exit(EXIT_FAILURE);
+                }
+                printf("\n");
+                if (debug == 1)
+                {
+                    printf("---> PASS XXXX\n");
                 }
                 memset(buf, '\0', BUF_SIZE);
                 receiveFServ(sfd, buf);
@@ -155,33 +174,26 @@ int main(void)
                 fgets(bufC, 1024, stdin);//get \n
             }
         }
-        else if ((type == CMD_EXIT) || (type == CMD_CIAO))
-        {
-            endFtp = 0 ;
-           
-            if (debug == 1)
-            {
-                 printf("---> QUIT\n");
-            }
-        }
-        else if ((type == CMD_DEBUGON) || (type == CMD_DEBUGOFF))
-        {
-            if (debug == 0)
-            {
-                debug = 1;
-                printf("Debugging on (debug=1).\n");
-            }
-            else if (debug == 1)
-            {
-                debug = 0;
-                printf("Debugging on (debug=0).\n");
-            }
-        }
         else
         {
             if(!connected)
             {
-                printf("Not Connected\n");
+                if ((type == CMD_EXIT) || (type == CMD_CIAO))
+                {
+                    endFtp = 0 ;
+                }
+                else if (type == CMD_DEBUGON)
+                {
+                    debug = 1;
+                    printf("Debugging on (debug=1).\n");
+                }
+                else if (type == CMD_DEBUGOFF)
+                {
+                    debug = 0;
+                    printf("Debugging on (debug=0).\n");
+                }
+                else
+                    printf("Not Connected\n");
             }
             else
             { 
@@ -189,12 +201,13 @@ int main(void)
                 {
                     case CMD_EXIT :
                     case CMD_CIAO :
-                        endFtp = 0;
-                        
+                        endFtp = 0 ;
+                        send(sfd,"QUIT\r\n",6,0);
                         if (debug == 1)
                         {
                             printf("---> QUIT\n");
                         }
+                        receiveFServ(sfd, buf);
                         break;
                     case CMD_DIR:
                         break;
