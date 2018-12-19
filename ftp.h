@@ -23,5 +23,6 @@ int exit(int sockfd, int debug);
 int cd(int sockfd, char * file, int debug);
 int debug(int sockfd, int debug);
 int get(int sockfd, char * file, int debug);
+int ciao(int sockfd, int debug);
 
 #endif

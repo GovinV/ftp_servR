@@ -66,3 +66,14 @@ int get(int sockfd, char * file, int debug)
 {
 
 }
+
+/*
+ * ---> QUIT
+ * 221 Goodbye.
+*/
+int ciao(int sockfd, int debug)
+{
+
+}
+
+/* ren mkd rmd send */ 
