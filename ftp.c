@@ -1,5 +1,51 @@
 #include "ftp.h"
 
+
+/*
+
+
+ftp> ren cons.txt kostas.txt
+---> RNFR cons.txt
+350 Ready for RNTO.
+---> RNTO kostas.txt
+550 Rename failed.
+
+
+ftp> cd files
+---> CWD files
+250 Directory successfully changed.
+
+
+ftp> cd ..
+---> CWD ..
+250 Directory successfully changed.
+
+
+ftp> mkd toto
+---> MKD toto
+550 Create directory operation failed.
+
+
+ftp> rmd toto
+---> RMD toto
+550 Remove directory operation failed.
+
+
+ftp> del cons.txt
+---> DELE cons.txt
+550 Delete operation failed.
+*/
+
+
+
+
+
+
+
+
+
+
+
 int send2Serv(int sockfd)
 {
 
