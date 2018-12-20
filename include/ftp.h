@@ -20,5 +20,6 @@ int cmd_rmd(int sockfd, char * filename, char * buf, int debug);
 int cmd_mkd(int sockfd, char * filename, char * buf, int debug);
 int cmd_ren(int sockfd, char * filename, char * filename2, char * buf, int debug);
 void writeData(int fd, FILE * ffd, char * buf);
+int cmd_send(int sockfd, char * buf, char * filename,  int debug );
 
 #endif

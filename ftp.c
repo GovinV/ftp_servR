@@ -136,6 +136,25 @@ void writeData(int fd, FILE * ffd, char * buf)
 	} while(count == BUF_SIZE);	
 }
 
+void writeSocket(int fd, FILE * ffd, char * buf)
+{
+	int count, dfd;
+	struct sockaddr_in addr;
+	socklen_t addr_size = sizeof(struct sockaddr_in);
+	if((dfd = accept(fd,(struct sockaddr *)&addr,&addr_size))== -1)
+    {
+        perror("accept");
+        close(fd);
+        return;
+    }
+	do
+	{
+		memset(buf, '\0', BUF_SIZE);
+		count = fread(buf, BUF_SIZE, 1, ffd);
+		write(dfd, buf, BUF_SIZE);
+	} while(count == BUF_SIZE);	
+}
+
 void receiveFServ(int sfd, char * buf) 
 {
 	int count;
@@ -273,3 +292,39 @@ int cmd_get(int sockfd, char * buf, char * filename,  int debug)
 	return 0;
 }
 
+/*
+ftp> send blal
+local: blal remote: blal
+ftp: setsockopt (ignored): Permission denied
+---> PORT 127,0,0,1,204,209
+200 PORT command successful. Consider using PASV.
+---> STOR blal
+150 Ok to send data.
+226 Transfer complete.
+16 bytes sent in 0.00 secs (143.3486 kB/s)
+*/
+int cmd_send(int sockfd, char * buf, char * filename,  int debug )
+{
+	int dfd;
+	FILE * fd;
+	
+	dfd = ftp_dataSock(sockfd, debug, buf);
+	if(dfd == -1)
+	{
+		printf("ERROR\n");
+		return 0;
+	}
+	sprintf(buf, "STOR %s\r\n", filename);
+	if (debug == 1)
+	{
+		printf("---> %s\n", buf);
+	}
+	fd = fopen(filename, "r");
+	send(sockfd,buf,strlen(buf),0);
+	receiveFServ(sockfd,buf);
+	writeSocket(dfd, fd, buf); 
+	receiveFServ(sockfd,buf);
+	close(dfd);
+	fclose(fd);
+	return 0;
+}

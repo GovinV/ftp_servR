@@ -228,6 +228,8 @@ int main(void)
                         cmd_get(sfd, buf, host, debug);
                         break;
                     case CMD_SEND:
+                        sscanf(bufC, "%s %s\n", trash, host);
+                        cmd_send(sfd, buf, host, debug);
                         break;
                     case CMD_REN:
                         sscanf(bufC, "%s %s %s\n", trash, host, host2);
