@@ -132,7 +132,8 @@ void writeData(int fd, FILE * ffd, char * buf)
 	{
 		memset(buf, '\0', BUF_SIZE);
 		count = recv(fd, buf, BUF_SIZE, 0);
-		fwrite(buf, 1 , BUF_SIZE, ffd);
+
+		fprintf(ffd,"%s", buf);
 	} while(count == BUF_SIZE);	
 }
 
@@ -144,15 +145,17 @@ void writeSocket(int fd, FILE * ffd, char * buf)
 	if((dfd = accept(fd,(struct sockaddr *)&addr,&addr_size))== -1)
     {
         perror("accept");
-        close(fd);
+        close(dfd);
         return;
     }
 	do
 	{
 		memset(buf, '\0', BUF_SIZE);
-		count = fread(buf, BUF_SIZE, 1, ffd);
-		write(dfd, buf, BUF_SIZE);
-	} while(count == BUF_SIZE);	
+		count = fread(buf, 1, BUF_SIZE, ffd);
+		send(dfd, buf, strlen(buf),0);
+		fprintf(ffd,"%s", buf);
+	} while(count == BUF_SIZE);
+	close(dfd);
 }
 
 void receiveFServ(int sfd, char * buf) 
@@ -283,12 +286,13 @@ int cmd_get(int sockfd, char * buf, char * filename,  int debug)
 		printf("---> %s\n", buf);
 	}
 	/* creer fichier du meme nom sur le rep actuel */
-	fd = fopen(filename, "w");
+	fd = fopen(filename, "w+");
 	send(sockfd,buf,strlen(buf),0);
 	receiveFServ(sockfd,buf);
 	writeData(dfd, fd, buf); 
 	receiveFServ(sockfd,buf);
 	close(dfd);
+	fclose(fd);
 	return 0;
 }
 
@@ -322,9 +326,12 @@ int cmd_send(int sockfd, char * buf, char * filename,  int debug )
 	fd = fopen(filename, "r");
 	send(sockfd,buf,strlen(buf),0);
 	receiveFServ(sockfd,buf);
-	writeSocket(dfd, fd, buf); 
-	receiveFServ(sockfd,buf);
-	close(dfd);
+	writeSocket(dfd, fd, buf);
 	fclose(fd);
+	shutdown(dfd, 2);
+	close(dfd); 
+	receiveFServ(sockfd,buf);
+	
+	
 	return 0;
 }
