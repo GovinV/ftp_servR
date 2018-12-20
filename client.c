@@ -27,7 +27,7 @@ int main(void)
 
     char    buf[BUF_SIZE],
             bufC[BUF_SIZE], 
-            trash[120],
+            trash[BUF_SIZE],
             host[BUF_SIZE],
             login[MAX_LOGIN],
             password[MAX_PASSWORD],
@@ -54,6 +54,8 @@ int main(void)
     
     while(endFtp)
     {   
+        memset(host, '\0', BUF_SIZE);
+        memset(trash, '\0', BUF_SIZE);
         if(fgets(bufC, BUF_SIZE, stdin) == NULL)
         {
             printf("ftp> ");
@@ -220,14 +222,19 @@ int main(void)
                         printf("Debugging on (debug=0).\n");
                         break;
                     case CMD_GET:
+                        
                         break;
                     case CMD_SEND:
                         break;
                     case CMD_REN:
                         break;
                     case CMD_DEL:
+                        sscanf(bufC, "%s %s\n",trash,host);
+                        cmd_del(sfd, host, buf, debug);
                         break;
                     case CMD_CD:
+                        sscanf(bufC, "%s %s\n",trash,host);
+                        cmd_cd(sfd, host, buf, debug);
                         break;
                     case CMD_MKD:
                         break;

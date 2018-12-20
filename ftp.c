@@ -26,6 +26,7 @@ ftp> mkd toto
 550 Create directory operation failed.
 
 
+
 ftp> rmd toto
 ---> RMD toto
 550 Remove directory operation failed.
@@ -40,7 +41,17 @@ ftp> del cons.txt
 
 
 
-
+int cmd_del(int sockfd, char * filename, char * buf, int debug)
+{
+	sprintf(buf, "DEL %s\r\n", filename);
+	if (debug == 1)
+	{
+		printf("---> %s\n", buf);
+	}
+	send(sockfd,buf,strlen(buf),0);
+	receiveFServ(sockfd,buf);
+	return 0;
+}
 
 
 
@@ -166,6 +177,7 @@ int cmd_show(int sfd, char * filename, int debug,char * buf)
 	receiveData(dfd,buf);
 	receiveFServ(sfd,buf);
 	close(dfd);    
+	return 0;
 }
 
 
@@ -191,25 +203,25 @@ int cmd_dir(int sfd, int debug,char * buf)
 	receiveData(dfd,buf);
 	receiveFServ(sfd,buf);
 	close(dfd);
+	return 0;
 }
 
 /*
  * ---> CWD Documents
  * 250 Directory successfully changed.
 */
-int cmd_cd(int sockfd, char * file, int debug)
+int cmd_cd(int sockfd, char * directory, char * buf, int debug)
 {
-
+	sprintf(buf, "CWD %s\r\n", directory);
+	if (debug == 1)
+	{
+		printf("---> %s\n", buf);
+	}
+	send(sockfd,buf,strlen(buf),0);
+	receiveFServ(sockfd,buf);
+	return 0;
 }
 
-/*
- * Debugging off (debug=0).
- * Debugging off (debug=1).
-*/
-int cmd_debug(int sockfd, int debug)
-{
-
-}
 
 /* 
  * local: <file> remote: <file>
@@ -222,9 +234,25 @@ int cmd_debug(int sockfd, int debug)
  * 226 Transfer complete.
  * <byte> bytes received in 0.01 secs (95.3139 kB/s)
 */
-int cmd_get(int sockfd, char * file, int debug)
+int cmd_get(int sockfd, char * buf, int debug)
 {
-
+	int dfd = ftp_dataSock(sockfd, debug, buf);
+	if(dfd == -1)
+	{
+		printf("ERROR\n");
+		return 0;
+	}
+	sprintf(buf, "GET\r\n");
+	if (debug == 1)
+	{
+		printf("---> %s\n", buf);
+	}
+	send(sockfd,buf,strlen(buf),0);
+	receiveFServ(sockfd,buf);
+	receiveData(dfd,buf);
+	receiveFServ(sockfd,buf);
+	close(dfd);
+	return 0;
 }
 
 
