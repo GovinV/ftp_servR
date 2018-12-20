@@ -29,6 +29,7 @@ int main(void)
             bufC[BUF_SIZE], 
             trash[BUF_SIZE],
             host[BUF_SIZE],
+            host2[BUF_SIZE],
             login[MAX_LOGIN],
             password[MAX_PASSWORD],
             port[20];
@@ -55,6 +56,7 @@ int main(void)
     while(endFtp)
     {   
         memset(host, '\0', BUF_SIZE);
+        memset(host2, '\0', BUF_SIZE);
         memset(trash, '\0', BUF_SIZE);
         if(fgets(bufC, BUF_SIZE, stdin) == NULL)
         {
@@ -227,21 +229,23 @@ int main(void)
                     case CMD_SEND:
                         break;
                     case CMD_REN:
+                        sscanf(bufC, "%s %s %s\n", trash, host, host2);
+                        cmd_ren(sfd, host, host2, buf, debug);
                         break;
                     case CMD_DEL:
-                        sscanf(bufC, "%s %s\n",trash,host);
+                        sscanf(bufC, "%s %s\n", trash, host);
                         cmd_del(sfd, host, buf, debug);
                         break;
                     case CMD_CD:
-                        sscanf(bufC, "%s %s\n",trash,host);
+                        sscanf(bufC, "%s %s\n", trash, host);
                         cmd_cd(sfd, host, buf, debug);
                         break;
                     case CMD_MKD:
-                        sscanf(bufC, "%s %s\n",trash,host);
+                        sscanf(bufC, "%s %s\n", trash, host);
                         cmd_mkd(sfd, host, buf, debug);
                         break;
                     case CMD_RMD:
-                        sscanf(bufC, "%s %s\n",trash,host);
+                        sscanf(bufC, "%s %s\n", trash, host);
                         cmd_rmd(sfd, host, buf, debug);
                         break;
                 }

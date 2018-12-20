@@ -1,41 +1,24 @@
 #include "ftp.h"
 
+int cmd_ren(int sockfd, char * filename, char * filename2, char * buf, int debug)
+{
+	sprintf(buf, "RNFR %s\r\n", filename);
+	if (debug == 1)
+	{
+		printf("---> %s\n", buf);
+	}
+	send(sockfd,buf,strlen(buf),0);
+	receiveFServ(sockfd,buf);
+	sprintf(buf, "RNTO %s\r\n", filename2);
+	if (debug == 1)
+	{
+		printf("---> %s\n", buf);
+	}
+	send(sockfd,buf,strlen(buf),0);
+	receiveFServ(sockfd,buf);
+	return 0;
+}
 
-/*
-
-
-ftp> ren cons.txt kostas.txt
----> RNFR cons.txt
-350 Ready for RNTO.
----> RNTO kostas.txt
-550 Rename failed.
-
-
-ftp> cd files
----> CWD files
-250 Directory successfully changed.
-
-
-ftp> cd ..
----> CWD ..
-250 Directory successfully changed.
-
-
-ftp> mkd toto
----> MKD toto
-550 Create directory operation failed.
-
-
-
-ftp> rmd toto
----> RMD toto
-550 Remove directory operation failed.
-
-
-ftp> del cons.txt
----> DELE cons.txt
-550 Delete operation failed.
-*/
 int cmd_mkd(int sockfd, char * filename, char * buf, int debug)
 {
 	sprintf(buf, "MKD %s\r\n", filename);
@@ -73,13 +56,9 @@ int cmd_del(int sockfd, char * filename, char * buf, int debug)
 	return 0;
 }
 
-
-
-
-
 int send2Serv(int sockfd)
 {
-
+	return 0;
 }
 
 int ftp_dataSock(int sfd, int debug, char * buf)

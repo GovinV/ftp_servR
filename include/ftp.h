@@ -19,5 +19,6 @@ int cmd_get(int sockfd, char * buf, int debug);
 int cmd_del(int sockfd, char * filename, char * buf, int debug);
 int cmd_rmd(int sockfd, char * filename, char * buf, int debug);
 int cmd_mkd(int sockfd, char * filename, char * buf, int debug);
+int cmd_ren(int sockfd, char * filename, char * filename2, char * buf, int debug);
 
 #endif
