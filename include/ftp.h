@@ -3,10 +3,11 @@
 
 #include "cmdFtp.h"
 
-#define MAX_RECEIVE 256
-#define BUF_SIZE 1024
-#define MAX_LOGIN 64
-#define MAX_PASSWORD 64
+#define MAX_RECEIVE     256
+#define BUF_SIZE        1024
+#define MAX_LOGIN       64
+#define MAX_PORT        20
+#define MAX_PASSWORD    64
 
 int ftp_dataSock(int sfd, int debug, char * buf);
 void receiveData(int dfd, char *buf);

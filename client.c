@@ -18,43 +18,44 @@ int main(void)
     struct addrinfo hints;
     struct addrinfo *result, *rp;
     
-    int sfd, 
-        s,
-        type,
-        endFtp,
-        debug,
-        connected;
+    int sfd,        // socket
+        s,          // ret getaddrinfo 
+        type,       // store command
+        endFtp,     // exit or ciao command
+        debug,      // debugon or debugoff
+        connected;  // connected or not
 
-    char    buf[BUF_SIZE],
-            bufC[BUF_SIZE], 
+    char    buf[BUF_SIZE],      // buf receive server
+            bufC[BUF_SIZE],     // buf arg
             trash[BUF_SIZE],
-            host[BUF_SIZE],
-            host2[BUF_SIZE],
+            host[BUF_SIZE],     // arg command
+            host2[BUF_SIZE],    // arg 2 command
             login[MAX_LOGIN],
             password[MAX_PASSWORD],
-            port[20];
-    struct termios term, term_orig;
+            port[MAX_PORT];
+    struct termios term, term_orig; // hide password
     
+    /* initialization */
     endFtp      = 1;
     connected   = 0;
     debug       = 0;
-
-
     memset(host,'\0',BUF_SIZE);
     memset(port,'\0',20);
     
     /* Obtain address(es) matching host/port */
-
     memset(&hints, 0, sizeof(struct addrinfo));
-    hints.ai_family = AF_INET;    /* Allow IPv4 or IPv6 */
-    hints.ai_socktype = SOCK_STREAM; /* Datagram socket */
+    hints.ai_family = AF_INET;           /* Allow IPv4 or IPv6  */
+    hints.ai_socktype = SOCK_STREAM;     /* Datagram socket     */
     hints.ai_flags = AI_PASSIVE;
-    hints.ai_protocol = 0;          /* Any protocol */
+    hints.ai_protocol = 0;               /* Any protocol        */
 
     printf("ftp> ");
     
+
+    /* while we don't have a EXIT or CIAO command */
     while(endFtp)
     {   
+        /* reset string */
         memset(host, '\0', BUF_SIZE);
         memset(host2, '\0', BUF_SIZE);
         memset(trash, '\0', BUF_SIZE);
@@ -68,6 +69,7 @@ int main(void)
             printf("ftp> ");
             continue;            
         }
+        /* command = file cmdFtp.c => verify if client writes correctly */
         type = command(bufC);
 
         if(type == CMD_OPEN)
@@ -83,27 +85,26 @@ int main(void)
             }
 
             /* 
-              getaddrinfo() returns a list of address structures.
-              Try each address until we successfully connect(2).
-              If socket(2) (or connect(2)) fails, we (close the socket
-              and) try the next address. 
+             * getaddrinfo() returns a list of address structures.
+             * Try each address until we successfully connect(2).
+             * If socket(2) (or connect(2)) fails, we (close the socket
+             * and) try the next address. 
             */
-
             for (rp = result; rp != NULL; rp = rp->ai_next) 
             {
-                sfd = socket(rp->ai_family, rp->ai_socktype,
-                            rp->ai_protocol);
-               if (sfd == -1)
-                   continue;
+                sfd = socket(rp->ai_family, rp->ai_socktype, rp->ai_protocol);
+                if (sfd == -1) 
+                    continue;
 
-               if (connect(sfd, rp->ai_addr, rp->ai_addrlen) != -1)
+                if (connect(sfd, rp->ai_addr, rp->ai_addrlen) != -1)
                    break;                  /* Success */
 
                close(sfd);
             }
 
             if (rp == NULL) 
-            {               /* No address succeeded */
+            {               
+                /* No address succeeded */
                fprintf(stderr, "Could not connect\n");
                printf("ftp> ");
                continue;
@@ -118,7 +119,7 @@ int main(void)
                 scanf("%s", login);
                 if (strncmp(login, "anonymous",9) == 0)
                 {
-                    printf("Any password, however type at least a letter before <enter>\n");
+                    printf("Any password, however type at least a letter or a number before <enter>\n");
                     fflush(stdout);
                 }
                 sprintf(buf, "USER %s\r\n", login);
@@ -152,8 +153,7 @@ int main(void)
                 tcsetattr(STDIN_FILENO, TCSANOW, &term_orig);
                 /* hide password */
                 sprintf(buf, "PASS %s\n", password);
-                if (sendto(sfd, buf, strlen(buf),0,
-                (struct sockaddr *)rp->ai_addr,rp->ai_addrlen) == -1) 
+                if (sendto(sfd, buf, strlen(buf),0, (struct sockaddr *)rp->ai_addr,rp->ai_addrlen) == -1) 
                 {
                     perror("sendto");
                     exit(EXIT_FAILURE);
@@ -167,14 +167,15 @@ int main(void)
                 receiveFServ(sfd, buf);
 
                 /* end password */
-                /* end authentification */
+                /* end authentification = client is connected */
                 connected = 1;
                 freeaddrinfo(result);           /* No longer needed */
-                fgets(bufC, 1024, stdin);//get \n
+                fgets(bufC, 1024, stdin); // get \n
             }
-        }
+        } /* end if command open */
         else
         {
+            /* if open has not work, client is not connected - can't use all command */
             if(!connected)
             {
                 if (type == CMD_EXIT)
@@ -192,10 +193,11 @@ int main(void)
                     printf("Debugging on (debug=0).\n");
                 }
                 else
-                    printf("Not Connected\n");
+                    printf("You're not Connected.\n");
             }
             else
             { 
+                /* if open has work, client is connected, he can use different command */
                 switch(type)
                 {
                     case CMD_EXIT :
@@ -251,15 +253,15 @@ int main(void)
                         sscanf(bufC, "%s %s\n", trash, host);
                         cmd_rmd(sfd, host, buf, debug);
                         break;
-                }
-            }
-        }
+                    default : 
+                        break;
+                } /* switch */
+            } /* not connected */
+        } /* end else command open */
         if (endFtp)
         { 
             printf("ftp> ");
         }
-    }
-
-
+    } /* end while */
     return 0;
 }
