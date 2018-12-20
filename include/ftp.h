@@ -9,7 +9,6 @@
 #define MAX_PASSWORD 64
 
 int ftp_dataSock(int sfd, int debug, char * buf);
-int send2Serv(int sockfd);
 void receiveData(int dfd, char *buf);
 void receiveFServ(int sockfd,char * buf);
 int cmd_show(int sfd, char * filename, int debug,char * buf);

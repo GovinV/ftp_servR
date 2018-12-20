@@ -56,11 +56,6 @@ int cmd_del(int sockfd, char * filename, char * buf, int debug)
 	return 0;
 }
 
-int send2Serv(int sockfd)
-{
-	return 0;
-}
-
 int ftp_dataSock(int sfd, int debug, char * buf)
 {
 	int fd; 
