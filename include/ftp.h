@@ -8,10 +8,12 @@
 #define MAX_LOGIN 64
 #define MAX_PASSWORD 64
 
+int ftp_dataSock(int sfd, int debug, char * buf);
 int send2Serv(int sockfd);
+void receiveData(int dfd, char *buf);
 void receiveFServ(int sockfd,char * buf);
-int cmd_show(int sockfd, char * file, int debug, int sockdata);
-int cmd_ls(int sockfd, int debug);
+int cmd_show(int sfd, char * filename, int debug,char * buf);
+int cmd_dir(int sfd, int debug,char * buf);
 int cmd_cd(int sockfd, char * file, int debug);
 int cmd_debug(int sockfd, int debug);
 int cmd_get(int sockfd, char * file, int debug);

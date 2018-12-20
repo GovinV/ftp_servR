@@ -14,9 +14,10 @@
 
 int main(void)
 {
-
+    
     struct addrinfo hints;
     struct addrinfo *result, *rp;
+    
     int sfd, 
         s,
         type,
@@ -25,26 +26,20 @@ int main(void)
         connected;
 
     char    buf[BUF_SIZE],
-            bufC[1024], 
+            bufC[BUF_SIZE], 
             trash[120],
-            host[1024],
+            host[BUF_SIZE],
             login[MAX_LOGIN],
             password[MAX_PASSWORD],
             port[20];
     struct termios term, term_orig;
-    // check the number of args on command line
-    // if(argc != 1)
-    // {
-    //     printf("USAGE: ./client \n");
-    //     exit(-1);
-    // }
     
     endFtp      = 1;
     connected   = 0;
     debug       = 0;
 
 
-    memset(host,'\0',1024);
+    memset(host,'\0',BUF_SIZE);
     memset(port,'\0',20);
     
     /* Obtain address(es) matching host/port */
@@ -59,7 +54,7 @@ int main(void)
     
     while(endFtp)
     {   
-        if(fgets(bufC, 1024, stdin) == NULL)
+        if(fgets(bufC, BUF_SIZE, stdin) == NULL)
         {
             printf("ftp> ");
             continue;
@@ -122,7 +117,7 @@ int main(void)
                     printf("Any password, however type at least a letter before <enter>\n");
                     fflush(stdout);
                 }
-                sprintf(buf, "USER %s\n", login);
+                sprintf(buf, "USER %s\r\n", login);
                 if (sendto(sfd, buf, strlen(buf),0,
                 (struct sockaddr *)rp->ai_addr,rp->ai_addrlen) == -1) 
                 {
@@ -178,7 +173,7 @@ int main(void)
         {
             if(!connected)
             {
-                if ((type == CMD_EXIT) || (type == CMD_CIAO))
+                if (type == CMD_EXIT)
                 {
                     endFtp = 0 ;
                 }
@@ -210,21 +205,19 @@ int main(void)
                         receiveFServ(sfd, buf);
                         break;
                     case CMD_DIR:
+                        cmd_dir(sfd,debug,buf);
                         break;
                     case CMD_SHOW:
+                        sscanf(bufC, "%s %s\n",trash,host);
+                        cmd_show(sfd,host,debug,buf);
                         break;
                     case CMD_DEBUGON:
+                        debug = 1;
+                        printf("Debugging on (debug=1).\n");
+                        break;
                     case CMD_DEBUGOFF:
-                        if (debug == 0)
-                        {
-                            debug = 1;
-                            printf("Debugging on (debug=1).\n");
-                        }
-                        else if (debug == 1)
-                        {
-                            debug = 0;
-                            printf("Debugging on (debug=0).\n");
-                        }
+                        debug = 0;
+                        printf("Debugging on (debug=0).\n");
                         break;
                     case CMD_GET:
                         break;

@@ -5,11 +5,73 @@ int send2Serv(int sockfd)
 
 }
 
+int ftp_dataSock(int sfd, int debug, char * buf)
+{
+	int fd; 
+	if((fd = socket(AF_INET,SOCK_STREAM,0)) == -1) 
+	{
+		perror("socket");
+		return -1;
+	}
+
+	struct sockaddr_in addr;
+	socklen_t addr_size = sizeof(struct sockaddr_in);
+	getsockname(sfd, (struct sockaddr*)&addr, &addr_size);
+	addr.sin_port = ntohs(0);
+
+
+
+	if (bind(fd,(const struct sockaddr *)&addr,addr_size)) //get a port for data
+	{
+		perror("bind");
+		close(fd);
+		return 1;
+	}
+	listen(fd, 5);
+
+	getsockname(fd, (struct sockaddr*)&addr, &addr_size);
+ 	memset(buf, '\0', BUF_SIZE);
+	sprintf(buf, "PORT %d,%d,%d,%d,%d,%d\r\n",
+				addr.sin_addr.s_addr&0xFF,
+				(addr.sin_addr.s_addr&0xFF00)>>8,
+				(addr.sin_addr.s_addr&0xFF0000)>>16,
+				(addr.sin_addr.s_addr&0xFF000000)>>24,
+				 ntohs(addr.sin_port)/256,
+				 ntohs(addr.sin_port)%256);
+	send(sfd,buf,strlen(buf),0);
+	if(debug)
+		printf("---> %s",buf);
+	receiveFServ(sfd,buf);
+	fflush(stdout);
+	return fd;
+
+}
+
+void receiveData(int dfd, char *buf)
+{
+	int count, fd;
+	struct sockaddr_in addr;
+	socklen_t addr_size = sizeof(struct sockaddr_in);
+	if((fd = accept(dfd,(struct sockaddr *)&addr,&addr_size))== -1)
+    {
+        perror("accept");
+        close(dfd);
+        return;
+    }
+	do
+	{
+		memset(buf, '\0', BUF_SIZE);
+		count = recv(fd, buf, BUF_SIZE, 0);
+		printf("%s",buf);
+	} while(count == BUF_SIZE);	
+}
+
 void receiveFServ(int sfd, char * buf) 
 {
 	int count;
 	do
 	{
+		memset(buf, '\0', BUF_SIZE);
 		count = recv(sfd, buf, BUF_SIZE, 0);
 		int end = 1;
 		char *s = buf;
@@ -35,10 +97,31 @@ void receiveFServ(int sfd, char * buf)
 	} while(count == BUF_SIZE);
 }
 
-int cmd_show(int sockfd, char * file, int debug, int sockdata)
+/*
+---> PORT 127,0,0,1,202,175
+200 PORT command successful. Consider using PASV.
+---> RETR constan.txt
+150 Opening BINARY mode data connection for constan.txt (10 bytes).
+226 Transfer complete.
+*/
+int cmd_show(int sfd, char * filename, int debug,char * buf)
 {
-    
+	int dfd = ftp_dataSock(sfd,debug,buf);
+	if(dfd == -1)
+	{
+		printf("ERROR\n");
+		return 0;
+	}
+	sprintf(buf, "RETR %s\r\n",filename);
+	if(debug)
+		printf("---> %s",buf);
+	send(sfd,buf,strlen(buf),0);
+	receiveFServ(sfd,buf);
+	receiveData(dfd,buf);
+	receiveFServ(sfd,buf);
+	close(dfd);    
 }
+
 
 /*
  * 200 PORT command successful. Consider using PASV.
@@ -46,9 +129,22 @@ int cmd_show(int sockfd, char * file, int debug, int sockdata)
  * 150 Here comes the directory listing.
  * 226 Directory send OK.
 */
-int cmd_ls(int sockfd, int debug)
+int cmd_dir(int sfd, int debug,char * buf)
 {
-
+	int dfd = ftp_dataSock(sfd,debug,buf);
+	if(dfd == -1)
+	{
+		printf("ERROR\n");
+		return 0;
+	}
+	sprintf(buf, "LIST\r\n");
+	if(debug)
+		printf("---> %s",buf);
+	send(sfd,buf,strlen(buf),0);
+	receiveFServ(sfd,buf);
+	receiveData(dfd,buf);
+	receiveFServ(sfd,buf);
+	close(dfd);
 }
 
 /*
