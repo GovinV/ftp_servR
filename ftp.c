@@ -122,6 +122,25 @@ void receiveData(int dfd, char *buf)
 	} while(count == BUF_SIZE);	
 }
 
+void writeData(int fd, FILE * ffd, char * buf)
+{
+	int count;
+	struct sockaddr_in addr;
+	socklen_t addr_size = sizeof(struct sockaddr_in);
+	if((fd = accept(fd,(struct sockaddr *)&addr,&addr_size))== -1)
+    {
+        perror("accept");
+        close(fd);
+        return;
+    }
+	do
+	{
+		memset(buf, '\0', BUF_SIZE);
+		count = recv(fd, buf, BUF_SIZE, 0);
+		fwrite(buf, 1 , BUF_SIZE, ffd);
+	} while(count == BUF_SIZE);	
+}
+
 void receiveFServ(int sfd, char * buf) 
 {
 	int count;
@@ -233,26 +252,29 @@ int cmd_cd(int sockfd, char * directory, char * buf, int debug)
  * 226 Transfer complete.
  * <byte> bytes received in 0.01 secs (95.3139 kB/s)
 */
-int cmd_get(int sockfd, char * buf, int debug)
+int cmd_get(int sockfd, char * buf, char * filename,  int debug)
 {
-	int dfd = ftp_dataSock(sockfd, debug, buf);
+	FILE * fd;
+	int dfd;
+
+	dfd = ftp_dataSock(sockfd, debug, buf);
 	if(dfd == -1)
 	{
 		printf("ERROR\n");
 		return 0;
 	}
-	sprintf(buf, "GET\r\n");
+	sprintf(buf, "RETR %s\r\n", filename);
 	if (debug == 1)
 	{
 		printf("---> %s\n", buf);
 	}
+	/* creer fichier du meme nom sur le rep actuel */
+	fd = fopen(filename, "w");
 	send(sockfd,buf,strlen(buf),0);
 	receiveFServ(sockfd,buf);
-	receiveData(dfd,buf);
+	writeData(dfd, fd, buf); 
 	receiveFServ(sockfd,buf);
 	close(dfd);
 	return 0;
 }
 
-
-/* ren mkd rmd send */ 

@@ -15,10 +15,11 @@ void receiveFServ(int sockfd,char * buf);
 int cmd_show(int sfd, char * filename, int debug,char * buf);
 int cmd_dir(int sfd, int debug,char * buf);
 int cmd_cd(int sockfd, char * directory, char * buf, int debug);
-int cmd_get(int sockfd, char * buf, int debug);
+int cmd_get(int sockfd, char * buf, char * filename,  int debug);
 int cmd_del(int sockfd, char * filename, char * buf, int debug);
 int cmd_rmd(int sockfd, char * filename, char * buf, int debug);
 int cmd_mkd(int sockfd, char * filename, char * buf, int debug);
 int cmd_ren(int sockfd, char * filename, char * filename2, char * buf, int debug);
+void writeData(int fd, FILE * ffd, char * buf);
 
 #endif

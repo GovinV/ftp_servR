@@ -224,7 +224,8 @@ int main(void)
                         printf("Debugging on (debug=0).\n");
                         break;
                     case CMD_GET:
-                        
+                        sscanf(bufC, "%s %s\n", trash, host);
+                        cmd_get(sfd, buf, host, debug);
                         break;
                     case CMD_SEND:
                         break;
