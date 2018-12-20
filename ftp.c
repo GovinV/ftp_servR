@@ -36,14 +36,34 @@ ftp> del cons.txt
 ---> DELE cons.txt
 550 Delete operation failed.
 */
+int cmd_mkd(int sockfd, char * filename, char * buf, int debug)
+{
+	sprintf(buf, "MKD %s\r\n", filename);
+	if (debug == 1)
+	{
+		printf("---> %s\n", buf);
+	}
+	send(sockfd,buf,strlen(buf),0);
+	receiveFServ(sockfd,buf);
+	return 0;
+}
 
 
-
-
+int cmd_rmd(int sockfd, char * filename, char * buf, int debug)
+{
+	sprintf(buf, "RMD %s\r\n", filename);
+	if (debug == 1)
+	{
+		printf("---> %s\n", buf);
+	}
+	send(sockfd,buf,strlen(buf),0);
+	receiveFServ(sockfd,buf);
+	return 0;
+}
 
 int cmd_del(int sockfd, char * filename, char * buf, int debug)
 {
-	sprintf(buf, "DEL %s\r\n", filename);
+	sprintf(buf, "DELE %s\r\n", filename);
 	if (debug == 1)
 	{
 		printf("---> %s\n", buf);

@@ -237,8 +237,12 @@ int main(void)
                         cmd_cd(sfd, host, buf, debug);
                         break;
                     case CMD_MKD:
+                        sscanf(bufC, "%s %s\n",trash,host);
+                        cmd_mkd(sfd, host, buf, debug);
                         break;
                     case CMD_RMD:
+                        sscanf(bufC, "%s %s\n",trash,host);
+                        cmd_rmd(sfd, host, buf, debug);
                         break;
                 }
             }
